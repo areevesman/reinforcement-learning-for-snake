@@ -44,11 +44,11 @@ class Snake():
             # update position of head of snake
             if self.direction == 0:
                 self.x[0] = self.x[0] + self.step
-            elif self.direction == 1:
+            if self.direction == 1:
                 self.x[0] = self.x[0] - self.step
-            elif self.direction == 2:
+            if self.direction == 2:
                 self.y[0] = self.y[0] - self.step
-            elif self.direction == 3:
+            if self.direction == 3:
                 self.y[0] = self.y[0] + self.step
 
             self.update_count = 0
@@ -110,7 +110,31 @@ class Game():
                 self.apple = Apple(randint(0, self.window_width / self.player.step - 1),
                                    randint(0, self.window_height / self.player.step - 1))
 
-        elif self.out_of_bounds(self.player.x[0], self.player.y[0]):
+                # does snake collide with itself?
+        for i in range(2, self.player.length - 1):
+            #             print(i,list(zip(self.player.x,self.player.y)))
+            hit_self = self.is_collision(self.player.x[0],
+                                         self.player.y[0],
+                                         self.player.x[i],
+                                         self.player.y[i])
+
+            if hit_self:
+                print(self.player.x[0], self.player.y[0])
+                print(self.player.x[i], self.player.y[i])
+
+                print("You lose! Hit yourself: ")
+                print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
+                print("x[" + str(i) + "] (" + str(self.player.x[i]) + "," + \
+                      str(self.player.y[i]) + ")")
+                #                 print('hit yourself')
+                self.player = Snake()
+
+                self.apple = Apple(randint(0, self.window_width / self.player.step - 1),
+                                   randint(0, self.window_height / self.player.step - 1))
+
+                break
+
+        if self.out_of_bounds(self.player.x[0], self.player.y[0]):
             print("You lose! Hit wall: ")
             print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
             print("x[" + str(i) + "] (" + str(self.player.x[i]) + "," + \
@@ -121,30 +145,6 @@ class Game():
             self.apple = Apple(randint(0, self.window_width / self.player.step - 1),
                                randint(0, self.window_height / self.player.step - 1))
 
-        else:
-                # does snake collide with itself?
-            for i in range(2, self.player.length - 1):
-                #             print(i,list(zip(self.player.x,self.player.y)))
-                hit_self = self.is_collision(self.player.x[0],
-                                             self.player.y[0],
-                                             self.player.x[i],
-                                             self.player.y[i])
-
-                if hit_self:
-                    print(self.player.x[0], self.player.y[0])
-                    print(self.player.x[i], self.player.y[i])
-
-                    print("You lose! Hit yourself: ")
-                    print("x[0] (" + str(self.player.x[0]) + "," + str(self.player.y[0]) + ")")
-                    print("x[" + str(i) + "] (" + str(self.player.x[i]) + "," + \
-                          str(self.player.y[i]) + ")")
-                    #                 print('hit yourself')
-                    self.player = Snake()
-
-                    self.apple = Apple(randint(0, self.window_width / self.player.step - 1),
-                                       randint(0, self.window_height / self.player.step - 1))
-
-                    break
 
         pass
 
@@ -199,21 +199,21 @@ class App():
                 else:
                     self.game.player.moveRight()
 
-            elif (keys[K_LEFT]):
+            if (keys[K_LEFT]):
             # if action == 1:
                 if self.game.player.direction == 0:
                     self.game.player.moveRight()
                 else:
                     self.game.player.moveLeft()
 
-            elif (keys[K_UP]):
+            if (keys[K_UP]):
             # if action == 2:
                 if self.game.player.direction == 3:
                     self.game.player.moveDown()
                 else:
                     self.game.player.moveUp()
 
-            elif (keys[K_DOWN]):
+            if (keys[K_DOWN]):
             # if action == 3:
                 if self.game.player.direction == 2:
                     self.game.player.moveUp()
