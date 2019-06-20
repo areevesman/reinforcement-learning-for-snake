@@ -89,12 +89,13 @@ class Game():
 
     def out_of_bounds(self, x1, y1):
         if ((x1 < 0) or (y1 < 0) or
-                (x1 > self.window_width) or (y1 > self.window_height)):
+                (x1 > self.window_width-self.player.step) or (y1 > self.window_height-self.player.step)):
             return True
         return False
 
     def on_loop(self):
         self.player.update()
+        # print(list(zip(self.player.x, self.player.y)))
 
         # does snake eat apple?
         if self.is_collision(self.apple.x, self.apple.y,
@@ -110,7 +111,7 @@ class Game():
                 self.apple = Apple(randint(0, self.window_width / self.player.step - 1),
                                    randint(0, self.window_height / self.player.step - 1))
 
-                # does snake collide with itself?
+        # does snake collide with itself?
         for i in range(2, self.player.length - 1):
             #             print(i,list(zip(self.player.x,self.player.y)))
             hit_self = self.is_collision(self.player.x[0],
@@ -144,14 +145,16 @@ class Game():
 
             self.apple = Apple(randint(0, self.window_width / self.player.step - 1),
                                randint(0, self.window_height / self.player.step - 1))
-
+            while (self.apple.x, self.apple.y) in list(zip(self.player.x, self.player.y)):
+                self.apple = Apple(randint(0, self.window_width / self.player.step - 1),
+                                   randint(0, self.window_height / self.player.step - 1))
 
         pass
 
 
 class App():
 
-    def __init__(self, player=Snake(), apple=Apple(), game=Game()):
+    def __init__(self, game=Game()):
         self._running = True
         self._display_surf = None
         self._image_surf = None
@@ -226,7 +229,7 @@ class App():
             self.game.on_loop()
             self.on_render()
 
-            time.sleep(30.0 / 1000.0);
+            time.sleep(50.0 / 1000.0);
         self.on_cleanup()
 
 
