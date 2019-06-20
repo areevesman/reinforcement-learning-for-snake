@@ -1,4 +1,4 @@
-# Snake meets Reinforcement Learning
+# Reinforcement Learning for Snake
 
 ## Contributors
 
