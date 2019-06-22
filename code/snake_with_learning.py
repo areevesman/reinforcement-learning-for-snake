@@ -22,7 +22,7 @@ class Snake():
         self.direction = direction
         self.length = length
         self.x = [(i + 1) * self.step for i in range(self.length - 1, -1, -1)]
-        self.y = [1 * self.step for i in range(self.length - 1, -1, -1)]
+        self.y = [5 * self.step for i in range(self.length - 1, -1, -1)]
 
     def update(self):
 
@@ -61,7 +61,7 @@ class Snake():
 
 class Game():
 
-    def __init__(self, window_width=500, window_height=500, player=Snake(), apple=Apple(), epsilon=.1):
+    def __init__(self, window_width=500, window_height=500, player=Snake(), apple=Apple(), epsilon=.1, alpha=.1):
         self.window_width = window_width
         self.window_height = window_height
         self.snake = player
@@ -69,6 +69,10 @@ class Game():
         self.reward = 0
         self.epsilon = epsilon
         self.Q = {}
+        self.alpha = alpha
+        self.num_moves = 0
+        self.apple_count = 0
+        self.death_count = 0
 
         grid_locations = [(x, y) for x in range(self.window_width * -1, self.window_width + 50, 50)
                           for y in range(self.window_height * -1, self.window_height + 50, 50)]
@@ -78,8 +82,6 @@ class Game():
 
         for sa in state_actions:
             self.Q[str(sa)] = 0
-
-        print(list(self.Q.keys())[0])
 
     def is_collision(self, x1, y1, x2, y2):
         if ((x1 == x2) and (y1 == y2)):
@@ -112,8 +114,9 @@ class Game():
             self.snake.x = self.snake.x + [self.snake.x[-1]]
             self.snake.y = self.snake.y + [self.snake.y[-1]]
             self.snake.length = self.snake.length + 1
+            self.apple_count = self.apple_count + 1
             self.reward = 1
-            print(f'Score: {self.snake.length}')
+            # print(f'Score: {self.snake.length}')
 
             self.place_apple()
 
@@ -126,15 +129,8 @@ class Game():
                                  self.snake.x[i],
                                  self.snake.y[i]):
 
-                print(self.snake.x[0], self.snake.y[0])
-                print(self.snake.x[i], self.snake.y[i])
-
-                print("You lose! Hit yourself: ")
-                print("x[0] (" + str(self.snake.x[0]) + "," + str(self.snake.y[0]) + ")")
-                print("x[" + str(i) + "] (" + str(self.snake.x[i]) + "," + \
-                      str(self.snake.y[i]) + ")")
-
                 self.reward = -1
+                self.death_count = self.death_count + 1
                 # should change this to a random snake position in the future
                 self.snake = Snake()
                 self.place_apple()
@@ -142,21 +138,22 @@ class Game():
 
     def try_out_of_bounds(self):
         if self.is_out_of_bounds(self.snake.x[0], self.snake.y[0]):
-            print("You lose! Hit wall: ")
-            print("x[0] (" + str(self.snake.x[0]) + "," + str(self.snake.y[0]) + ")")
+            # print("You lose! Hit wall: ")
+            # print("x[0] (" + str(self.snake.x[0]) + "," + str(self.snake.y[0]) + ")")
             self.reward = -1
+            self.death_count = self.death_count + 1
             self.snake = Snake()
             self.place_apple()
 
     def make_move(self):
-        self.act()
         self.snake.update()
         self.try_eat_apple()
         self.try_hit_self()
         self.try_out_of_bounds()
         if self.reward == 0:
             self.reward = -0.05
-        print(self.reward)
+        # print(self.reward)
+        self.act_and_learn()
         self.reward = 0
 
     def get_state(self):
@@ -166,91 +163,47 @@ class Game():
                    self.apple.y - self.snake.y[0]))
         return state
 
-    def state_value(self, game_state):
-        """"Look up state value. If never seen state, then assume neutral."""
-        return self.V.get(game_state, 0.0)
-
-    def argmax_V(self, state_values):
-        "For the best possible states, chose randomly amongst them."
-        max_V = max(state_values.values())
-        chosen_state = random.choice([state for state, v in state_values.items() if v == max_V])
-        return chosen_state
-
-    def learn_select_move(self):
-        # allowed_state_values = self.state_values(game.allowed_moves())
-        best_move = self.argmax_V(allowed_state_values)
-        return best_move
-
     def select_best_action(self):
+        illegal_moves = {0: 1, 1: 0, 2: 3, 3: 2}
         current_state = self.get_state()
         possible_q_vals = []
         for i in range(4):
             possible_q_vals.append(((current_state,i),
                                      self.Q['('+str(current_state)+', '+str(i)+')']))
-        possible_q_vals = sorted(possible_q_vals, reverse=True)
-        
 
-        print(possible_q_vals)
-        raise Exception()
-
-
+        for tup in possible_q_vals:
+            if tup[0] == (current_state, illegal_moves[self.snake.direction]):
+                possible_q_vals.remove(tup)
+                break
 
 
-        # self.snake.direction
+        possible_q_vals = sorted(possible_q_vals, reverse=True, key=lambda x: x[1])
+        max_tuple = possible_q_vals[0]
+        max_action = max_tuple[0][1]
+        max_value = max_tuple[1]
 
+        return current_state, max_action, max_value
 
+    def act_and_learn(self):
+        current_state, best_next_action, best_next_state_value = self.select_best_action()
 
-
-
-    #     return randint(0, 3)
-    #
-    # def learn_from_move(self):
-    #     #state
-    #     current_state = self.get_state()
-    #
-    #     actions = list(range(3))
-    #
-    #
-    #
-    #     best_next_move = max(state_values.values())
-    #     chosen_state = random.choice([state for state, v in state_values.items() if v == max_V])
-    #
-    #     r = self.reward(game)
-    #
-    #     current_state_value = self.state_value(current_state)
-    #     best_move_value = self.state_value(best_next_move)
-    #     td_target = r + best_move_value
-    #     # This is Q-learning. The previous lines setup this line.
-    #     self.V[current_state] = current_state_value + self.alpha * (td_target - current_state_value)
-    #
-    #     game.make_move(selected_next_move)
-
-
-    def act(self):
         p = randint(0, 100) / 100.0
         if p < self.epsilon:
-            action = randint(0, 3)
+            actual_next_action = randint(0, 3)
         else:
-            action = self.select_best_action()
+            actual_next_action = best_next_action
 
-        moves = {'(0,0)': self.snake.moveRight,
-                 '(0,1)': self.snake.moveLeft,
-                 '(0,2)': self.snake.moveRight,
-                 '(0,3)': self.snake.moveRight,
-                 '(1,0)': self.snake.moveRight,
-                 '(1,1)': self.snake.moveLeft,
-                 '(1,2)': self.snake.moveLeft,
-                 '(1,3)': self.snake.moveLeft,
-                 '(2,0)': self.snake.moveUp,
-                 '(2,1)': self.snake.moveUp,
-                 '(2,2)': self.snake.moveUp,
-                 '(2,3)': self.snake.moveDown,
-                 '(3,0)': self.snake.moveDown,
-                 '(3,1)': self.snake.moveDown,
-                 '(3,2)': self.snake.moveUp,
-                 '(3,3)': self.snake.moveDown}
+        old_value = self.Q['(' + str(current_state) + ', ' + str(best_next_action) + ')']
+        td_target = self.reward + best_next_state_value
+        self.Q['(' + str(current_state) + ', ' + str(best_next_action) + ')'] = old_value + self.alpha * (td_target - old_value)
 
-        moves['(' + str(action) + ',' + str(self.snake.direction) + ')']()
+        moves = {0: self.snake.moveRight,
+                 1: self.snake.moveLeft,
+                 2: self.snake.moveUp,
+                 3: self.snake.moveDown}
+
+        move = moves[actual_next_action]
+        move()
 
 
 class App():
@@ -261,6 +214,7 @@ class App():
         self._image_surf = None
         self._apple_surf = None
         self.game = game
+        self.high_score = self.game.snake.length
 
     def on_init(self):
         pygame.init()
@@ -289,16 +243,27 @@ class App():
     def on_execute(self):
         if self.on_init() == False:
             self._running = False
-
+        i = 0
         while (self._running):
             pygame.event.pump()
-            # look at state
-            # determine which action is possible
 
             self.game.make_move()
-            self.on_render()
+            # self.on_render()
 
-            time.sleep(500.0 / 1000.0);
+            # time.sleep(1.0 / 1000.0)
+            i = i + 1
+            if self.game.snake.length > self.high_score:
+                self.high_score = self.game.snake.length
+            if i % 100 == 0:
+                print(f'Total moves:  {i}')
+                print(f'High score:   {self.high_score}')
+                print(f'Total apples: {self.game.apple_count}')
+                print(f'Apple pct:    {(self.game.apple_count / i*100):.3f}%')
+                print(f'Death pct:    {(self.game.death_count / i*100):.3f}%')
+                print(self.game.select_best_action())
+                print()
+            if i == 5000:
+                break
         self.on_cleanup()
 
 
