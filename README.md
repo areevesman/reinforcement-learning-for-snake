@@ -1,29 +1,22 @@
 # Reinforcement Learning for Snake
 
-## Objective
+The code in this repository is used to train agents to play snake using techniques from reinforcement learning.
+Tabular Q-learning and Value Function Approximation are implemented (using a simple Neural Network).
 
-Can we use Q-learning to train an agent to play Snake? Can we improve upon the results (lower training time and higher scores) with Value Function Approximation (VFA) and deep learning?
+## Resources
 
-## Progress
-
-The python script [code/snake.py](code/snake.py) has the implementation
-- environment (see the `Game` class)
-- agent (see the `Snake` class)
-  - can take random actions or be controlled by human (see `App` class)
-
-## Todo in order to finish
-- add rewards to environment
-  - large positive reward like +1 at apple location
-  - large negative reward like -1 at walls and snake body
-  - small negative rewards like -0.05 elsewhere to encourage snake to find apple
-- add code for reinforcement learning (Q-learning/VFA)
-
-## Contributors
-
-- Adam Reevesman
-- Evan Liu
+- A human playable version of snake is implemented in [code/01_human_snake.py](code/01_human_snake.py)
+   - to play, run `python snake.py` from the command line
+- Q-learning is implemented in [code/02_q_learning_snake.py](code/02_q_learning_snake.py)
+- Value Function approximation is implemented in [code/02_q_learning_snake.py](code/02_q_learning_snake.py)
 
 ## References
 
 - Snake with pygame [tutorial](https://pythonspot.com/snake-with-pygame/)
 - [LearnSnake: Teaching an AI to play Snake](https://italolelis.com/snake)
+- [Designing AI: Solving Snake with Evolution](https://becominghuman.ai/designing-ai-solving-snake-with-evolution-f3dd6a9da867)
+
+## Contributors
+
+- Adam Reevesman
+- Evan Liu
