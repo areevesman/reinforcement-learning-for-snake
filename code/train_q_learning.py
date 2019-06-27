@@ -29,6 +29,8 @@ class TrainingApp(App):
             pygame.event.pump()
             self.on_render()
             over = self.agent.lost_game()
+            score = len(self.agent.x)
+            pygame.display.set_caption(f'{self.caption[:-2]} {score}')
             while not over:
                 pygame.event.pump()
                 self.on_render()
@@ -62,7 +64,9 @@ class TrainingApp(App):
 
                 # if snake found apple, update apple_episode_count
                 if reward == .5:
+                    score = score + 1
                     apple_episode_count = apple_episode_count + 1
+                    pygame.display.set_caption(f'{self.caption[:-2]} {score}')
                 total_moves = total_moves + 1
 
             if (e > 0) and (e % save_every == 0):
@@ -85,5 +89,5 @@ class TrainingApp(App):
 
 
 if __name__ == "__main__":
-    theApp = TrainingApp(agent=Snake(), caption='Q-Learning')
+    theApp = TrainingApp(agent=Snake(), caption='Q-Learning - Score: 0')
     theApp.update_q_table(n_episodes=301, alpha=.1, discount=.9, epsilon=.1, save_results=True, save_every=25)

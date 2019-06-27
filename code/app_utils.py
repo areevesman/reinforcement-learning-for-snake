@@ -3,7 +3,7 @@ import pygame
 from agent import *
 
 class App():
-    def __init__(self, agent=Snake(), caption='Q-Learning'):
+    def __init__(self, agent=Snake(), caption='Q-Learning - Score: 0'):
         self._running = True
         self._display_surf = None
         self._image_surf = None

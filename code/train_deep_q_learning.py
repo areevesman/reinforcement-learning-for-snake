@@ -41,6 +41,8 @@ class TrainingApp(App):
             pygame.event.pump()
             self.on_render()
             over = self.agent.lost_game()
+            score = len(self.agent.x)
+            pygame.display.set_caption(f'{self.caption[:-2]} {score}')
             while not over:
                 pygame.event.pump()
                 self.on_render()
@@ -64,7 +66,8 @@ class TrainingApp(App):
                 self.on_render()
                 move_count = move_count + 1
                 if reward == .5:
-                    apple_count = apple_count + 1
+                    score = score + 1
+                    pygame.display.set_caption(f'{self.caption[:-2]} {score}')
                     apple_episode_count = apple_episode_count + 1
 
                 # Store experience.
@@ -125,6 +128,6 @@ def create_keras_model():
 
 
 if __name__ == "__main__":
-    theApp = TrainingApp(agent=Snake(), caption='Deep Q-Learning')
+    theApp = TrainingApp(agent=Snake(), caption='Deep Q-Learning - Score: 0')
     model = create_keras_model()
     theApp.train_model(model, n_episodes=301, epsilon=.1, alpha=.1, discount=.9, save_results=True, save_every=25)
