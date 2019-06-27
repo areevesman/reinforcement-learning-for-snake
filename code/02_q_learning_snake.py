@@ -268,28 +268,21 @@ class App():
         self.caption = caption
         self.save_results = save_results
         self.save_every = save_every
-        try:
-            raise Exception()
-        #   with open(f'./results/02_q_results/Q_vals-200.json') as json_file:
-        #         self.Q = json.load(json_file)
-        #     # print('read file')
-        except:
-            # print('didnt read file')
-            self.Q = {}
-            states = []
-            false_true = [0,1]
-            for a in false_true:
-                for b in false_true:
-                    for c in false_true:
-                        for d in false_true:
-                            for e in false_true:
-                                for f in false_true:
-                                    states.append((a,b,c,d,e,f))
+        self.Q = {}
+        states = []
+        false_true = [0,1]
+        for a in false_true:
+            for b in false_true:
+                for c in false_true:
+                    for d in false_true:
+                        for e in false_true:
+                            for f in false_true:
+                                states.append((a,b,c,d,e,f))
 
-            actions = [i for i in range(3)]
-            state_actions = [(s, a) for s in states for a in actions]
-            for sa in state_actions:
-                self.Q[str(sa)] = 0
+        actions = [i for i in range(3)]
+        state_actions = [(s, a) for s in states for a in actions]
+        for sa in state_actions:
+            self.Q[str(sa)] = 0
 
     def on_init(self):
         """start app and load images"""
@@ -329,8 +322,8 @@ class App():
         total_moves = 0
         t0 = time.time()
         apples_per_episode = []
+        apple_episode_count = 0
         for e in range(n_episodes):
-            apple_episode_count = 0
             # The next new episode
             self.agent.reset_game()
             pygame.event.pump()
@@ -378,6 +371,7 @@ class App():
 
                 print(f"{time_delta/60:.2f} minutes")
                 print(f"Epoch {e:,}/{n_episodes:,} Moves per Game: {total_moves/e:.2f} | Apple count {apple_episode_count}")
+                apple_episode_count = 0
 
                 if self.save_results:
                     with open(f'./results/02_q_results/Q_vals-{e}.json', 'w') as file:

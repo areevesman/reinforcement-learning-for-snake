@@ -432,18 +432,6 @@ class App():
 
 
 def read_or_create_keras_model():
-    # try:
-    #     # load json and create model
-    #     json_file = open(f"./results/03_deep_q_results/model-200.json", 'r')
-    #     loaded_model_json = json_file.read()
-    #     json_file.close()
-    #     loaded_model = model_from_json(loaded_model_json)
-    #     # load weights into new model
-    #     loaded_model.load_weights(f"./results/03_deep_q_results/model-200.h5")
-    #     print("Loaded model from disk")
-    #     return loaded_model
-    # except:
-    # create model
     model = Sequential()
     # add model layers
     model.add(Dense(5, input_shape=(6,)))
