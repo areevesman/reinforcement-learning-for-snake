@@ -317,7 +317,10 @@ class App():
         self._running = True
         self._head_surf = pygame.image.load("../images/snake_head.png").convert()
         self._image_surf = pygame.image.load("../images/snake2.png").convert()
-        self._apple_surf = pygame.image.load("../images/apple.png").convert()
+        try:
+            self._apple_surf = pygame.image.load("../images/jeff.png").convert()
+        except:
+            self._apple_surf = pygame.image.load("../images/apple.png").convert()
 
     def on_render(self):
         """show board in app"""
@@ -429,24 +432,24 @@ class App():
 
 
 def read_or_create_keras_model():
-    try:
-        # load json and create model
-        json_file = open(f"./results/03_deep_q_results/model-200.json", 'r')
-        loaded_model_json = json_file.read()
-        json_file.close()
-        loaded_model = model_from_json(loaded_model_json)
-        # load weights into new model
-        loaded_model.load_weights(f"./results/03_deep_q_results/model-200.h5")
-        print("Loaded model from disk")
-        return loaded_model
-    except:
-        # create model
-        model = Sequential()
-        # add model layers
-        model.add(Dense(5, input_shape=(6,)))
-        model.add(Dense(3))
-        # compile model
-        model.compile(optimizer='adam', loss='mse')
+    # try:
+    #     # load json and create model
+    #     json_file = open(f"./results/03_deep_q_results/model-200.json", 'r')
+    #     loaded_model_json = json_file.read()
+    #     json_file.close()
+    #     loaded_model = model_from_json(loaded_model_json)
+    #     # load weights into new model
+    #     loaded_model.load_weights(f"./results/03_deep_q_results/model-200.h5")
+    #     print("Loaded model from disk")
+    #     return loaded_model
+    # except:
+    # create model
+    model = Sequential()
+    # add model layers
+    model.add(Dense(5, input_shape=(6,)))
+    model.add(Dense(3))
+    # compile model
+    model.compile(optimizer='adam', loss='mse')
     return model
 
 

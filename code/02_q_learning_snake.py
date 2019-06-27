@@ -269,9 +269,10 @@ class App():
         self.save_results = save_results
         self.save_every = save_every
         try:
-            with open(f'./results/02_q_results/Q_vals-200.json') as json_file:
-                self.Q = json.load(json_file)
-            # print('read file')
+            raise Exception()
+        #   with open(f'./results/02_q_results/Q_vals-200.json') as json_file:
+        #         self.Q = json.load(json_file)
+        #     # print('read file')
         except:
             # print('didnt read file')
             self.Q = {}
@@ -301,7 +302,10 @@ class App():
         self._running = True
         self._head_surf = pygame.image.load("../images/snake_head.png").convert()
         self._image_surf = pygame.image.load("../images/snake2.png").convert()
-        self._apple_surf = pygame.image.load("../images/apple.png").convert()
+        try:
+            self._apple_surf = pygame.image.load("../images/jeff.png").convert()
+        except:
+            self._apple_surf = pygame.image.load("../images/apple.png").convert()
 
     def on_render(self):
         """show board in app"""
