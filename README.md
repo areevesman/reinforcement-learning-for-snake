@@ -2,6 +2,8 @@
 
 The code in this repository is used to train agents to play snake using techniques from reinforcement learning.
 Tabular Q-learning and Value Function Approximation are implemented (using a simple Neural Network).
+![](/images/demo.gif)
+
 ## Prerequisites
 
 - [pygame](https://www.pygame.org/wiki/GettingStarted)
