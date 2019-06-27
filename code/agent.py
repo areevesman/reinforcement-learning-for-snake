@@ -1,37 +1,6 @@
-from pygame.locals import *
-from random import randint
-import pygame
-import time
 import numpy as np
-import matplotlib.pyplot as plt
-import os
-import json
-
-class Apple():
-    def __init__(self, x=5, y=5, step=50):
-        self.step = step
-        self.x = x * self.step
-        self.y = y * self.step
-
-    def draw(self, surface, image):
-        """Show apple in pygame app"""
-        surface.blit(image, (self.x, self.y))
-
-class Game():
-    def __init__(self, window_width=500, window_height=500, apple=Apple()):
-        self.window_width = window_width
-        self.window_height = window_height
-        self.apple = apple
-
-    def place_apple(self):
-        """Ramdom x,y coordinate for apple"""
-        # place apple
-        self.apple = Apple(randint(0, self.window_width / self.apple.step - 1),
-                           randint(0, self.window_height / self.apple.step - 1))
-
-    def apple_location(self):
-        return [self.apple.x, self.apple.y]
-
+from environment import *
+from pygame.transform import rotate
 
 class Snake():
     def __init__(self, game=Game(), step=50, initial_length=5):
@@ -42,7 +11,7 @@ class Snake():
         self.x = None
         self.y = None
         self.direction = None
-        # key[:2] is snake direction and key[2:] is relative apple location, 
+        # key[:2] is snake direction and key[2:] is relative apple location,
         # value is whether or not apple is straight, left, right
         self.snake_apple_xy_dir_to_apple_states = {
             # move up
@@ -73,13 +42,13 @@ class Snake():
         """draw in pygame app"""
         direction_vector = self.get_2d_snake_direction()
         if np.all(direction_vector == [1,0]):
-            head = pygame.transform.rotate(head, -90)
+            head = rotate(head, -90)
         elif np.all(direction_vector == [-1,0]):
-            head = pygame.transform.rotate(head, 90)
+            head = rotate(head, 90)
         elif np.all(direction_vector == [0,1]):
-            head = pygame.transform.rotate(head, 180)
+            head = rotate(head, 180)
         else:
-            head = pygame.transform.rotate(head, 0)
+            head = rotate(head, 0)
         surface.blit(head, (self.x[0], self.y[0]))
         for i in range(1, len(self.x)):
             surface.blit(image, (self.x[i], self.y[i]))
@@ -256,134 +225,3 @@ class Snake():
             i, j = self.game.window_height - self.step - snake_position[k][1], snake_position[k][0]
             state[int(i / self.step), int(j / self.step)] = 1
         return state
-
-
-class App():
-    def __init__(self, agent=Snake(), caption='Q-Learning', save_results=True, save_every=100):
-        self._running = True
-        self._display_surf = None
-        self._image_surf = None
-        self._apple_surf = None
-        self.agent = agent
-        self.caption = caption
-        self.save_results = save_results
-        self.save_every = save_every
-        self.Q = {}
-        states = []
-        false_true = [0,1]
-        for a in false_true:
-            for b in false_true:
-                for c in false_true:
-                    for d in false_true:
-                        for e in false_true:
-                            for f in false_true:
-                                states.append((a,b,c,d,e,f))
-
-        actions = [i for i in range(3)]
-        state_actions = [(s, a) for s in states for a in actions]
-        for sa in state_actions:
-            self.Q[str(sa)] = 0
-
-    def on_init(self):
-        """start app and load images"""
-        pygame.init()
-        self._display_surf = pygame.display.set_mode((self.agent.game.window_width,
-                                                      self.agent.game.window_height),
-                                                      pygame.HWSURFACE)
-
-        pygame.display.set_caption(self.caption)
-        self._running = True
-        self._head_surf = pygame.image.load("../images/snake_head.png").convert()
-        self._image_surf = pygame.image.load("../images/snake2.png").convert()
-        try:
-            self._apple_surf = pygame.image.load("../images/jeff.png").convert()
-        except:
-            self._apple_surf = pygame.image.load("../images/apple.png").convert()
-
-    def on_render(self):
-        """show board in app"""
-        self._display_surf.fill((0, 0, 0))
-        self.agent.draw(self._display_surf, self._image_surf,self._head_surf)
-        self.agent.game.apple.draw(self._display_surf, self._apple_surf)
-        pygame.display.flip()
-
-    def on_cleanup(self):
-        """quit app"""
-        pygame.quit()
-
-    def update_q_table(self, n_episodes=1000, alpha=.1, discount=.9, epsilon=.1):
-        if self.on_init() == False:
-            self._running = False
-
-        if self.save_results:
-            if not os.path.exists('./results/02_q_results'):
-                os.makedirs('./results/02_q_results')
-
-        total_moves = 0
-        t0 = time.time()
-        apples_per_episode = []
-        apple_episode_count = 0
-        for e in range(n_episodes):
-            # The next new episode
-            self.agent.reset_game()
-            pygame.event.pump()
-            self.on_render()
-            over = self.agent.lost_game()
-            while not over:
-                pygame.event.pump()
-                self.on_render()
-                # Get state and q values for state action pairs
-                current_state = tuple(self.agent.get_state()[0])
-                q = [self.Q['(' + str(current_state) + ', ' + str(a) +')'] for a in range(3)]
-                
-                if (np.random.rand() <= epsilon):
-                    new_direction = np.random.randint(0, 2, size=1)[0]
-                    if (e % self.save_every) == 0:
-                        print(self.agent.print_board())
-                        print('moving randomly')
-                else:
-                    new_direction = np.argmax(q)
-                    if (e % self.save_every) == 0:
-                        print(self.agent.print_board())
-                        print(q)
-
-                # Apply action, get rewards and new state.
-                future_state, reward = self.agent.move_snake(new_direction)
-                pygame.event.pump()
-                self.on_render()
-
-                # Update with q learning
-                old_value = self.Q['(' + str(current_state) + ', ' + str(new_direction) + ')']
-                td_target = reward + discount*np.max(q)
-                self.Q['(' + str(current_state) + ', ' + str(new_direction) + ')'] = old_value + alpha * (td_target - old_value)
-
-                # Check for terminal state
-                over = self.agent.lost_game()
-
-                # if snake found apple, update apple_episode_count
-                if reward == .5:
-                    apple_episode_count = apple_episode_count + 1
-                total_moves = total_moves + 1
-
-            if (e > 0) and (e % self.save_every == 0):
-                t1 = time.time()
-                time_delta = t1 - t0
-
-                print(f"{time_delta/60:.2f} minutes")
-                print(f"Epoch {e:,}/{n_episodes:,} Moves per Game: {total_moves/e:.2f} | Apple count {apple_episode_count}")
-                apple_episode_count = 0
-
-                if self.save_results:
-                    with open(f'./results/02_q_results/Q_vals-{e}.json', 'w') as file:
-                        file.write(json.dumps(self.Q))
-                    fig = plt.figure(figsize=(12, 7))
-                    plt.plot(apples_per_episode, '.')
-                    plt.savefig(f'./results/02_q_results/score_per_episode-{e}.png')
-                    plt.close()
-            apples_per_episode.append(apple_episode_count)
-        self.on_cleanup()
-
-
-if __name__ == "__main__":
-    theApp = App(agent=Snake(), caption='Q-Learning', save_every=25)
-    theApp.update_q_table(n_episodes=301, alpha=.1, discount=.9, epsilon=.1)
