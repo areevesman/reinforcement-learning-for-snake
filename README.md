@@ -6,7 +6,7 @@ Tabular Q-learning and Value Function Approximation are implemented (using a sim
 ## Resources
 
 - A human playable version of snake is implemented in [code/01_human_snake.py](code/01_human_snake.py)
-   - to play, run `python snake.py` from the command line
+   - to play, run `python 01_human_snake.py` from the command line
 - Q-learning is implemented in [code/02_q_learning_snake.py](code/02_q_learning_snake.py)
 - Value Function approximation is implemented in [code/03_deep_q_learning_snake.py](code/03_deep_q_learning_snake..py)
 
