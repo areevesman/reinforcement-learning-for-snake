@@ -4,6 +4,7 @@ import pygame
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 from keras.models import Sequential
 from keras.layers import Dense
@@ -295,13 +296,15 @@ class ExperienceReplay():
 
 
 class App():
-    def __init__(self, agent=Snake(), caption='Deep Q-Learning'):
+    def __init__(self, agent=Snake(), caption='Q-Learning', save_results=True, save_every=100):
         self._running = True
         self._display_surf = None
         self._image_surf = None
         self._apple_surf = None
         self.agent = agent
         self.caption = caption
+        self.save_results = save_results
+        self.save_every = save_every
 
     def on_init(self):
         """start app and load images"""
@@ -312,9 +315,9 @@ class App():
 
         pygame.display.set_caption(self.caption)
         self._running = True
-        self._head_surf = pygame.image.load("/Users/areevesman/Documents/USF/Summer/learning-snake-with-rl/images/snake_head.png").convert()
-        self._image_surf = pygame.image.load("/Users/areevesman/Documents/USF/Summer/learning-snake-with-rl/images/snake2.png").convert()
-        self._apple_surf = pygame.image.load("/Users/areevesman/Documents/USF/Summer/learning-snake-with-rl/images/apple.png").convert()
+        self._head_surf = pygame.image.load("../images/snake_head.png").convert()
+        self._image_surf = pygame.image.load("../images/snake2.png").convert()
+        self._apple_surf = pygame.image.load("../images/apple.png").convert()
 
     def on_render(self):
         """show board in app"""
@@ -327,7 +330,7 @@ class App():
         """quit app"""
         pygame.quit()
 
-    def train_model(self, model, n_episodes=100, epsilon=.1, exp_replay=ExperienceReplay(), n_deaths_save=10):
+    def train_model(self, model, n_episodes=100, epsilon=.1, exp_replay=ExperienceReplay()):
         """train a neural network with experience replay
         examine and save results at every n_deaths_save"""
         self.on_init()
@@ -339,6 +342,10 @@ class App():
         total_moves = 0
         apples_per_epsiode = []
         t0 = time.time()
+
+        if self.save_results:
+            if not os.path.exists('./results/03_deep_q_results'):
+                os.makedirs('./results/03_deep_q_results')
 
         for e in range(n_episodes):
             apple_episode_count = 0
@@ -369,7 +376,7 @@ class App():
                 future_state, reward = self.agent.move_snake(new_direction)
                 pygame.event.pump()
                 self.on_render()
-                move_count = move_count + 1 
+                move_count = move_count + 1
                 if reward == .5:
                     apple_count = apple_count + 1
                     apple_episode_count = apple_episode_count + 1
@@ -391,47 +398,60 @@ class App():
                 else:
                     moves_per_apple_per_episode.append(move_count / apple_episode_count)
 
-            if (e > 0) and (e % n_deaths_save == 0):
+            if (e > 0) and (e % self.save_every == 0):
                 t1 = time.time()
                 time_delta = t1 - t0
+
                 print(f"{time_delta/60:.2f} minutes")
-                print(
-                    f"Epoch {e:,}/{n_episodes:,} | Loss {loss:.3f} | Moves per Game: {total_moves/e:.2f} | Apple count {apple_count}")
+                print(f"Epoch {e:,}/{n_episodes:,} | Loss {loss:.3f} | Moves per Game: {total_moves/e:.2f} | Apple count {apple_count}")
                 apple_count = 0
 
-                # save model and and plot various results to local directory
-                # serialize model to JSON
-                model_json = model.to_json()
-                with open(f"model-{e}.json", "w") as json_file:
-                    json_file.write(model_json)
-                # serialize weights to HDF5
-                model.save_weights(f"model-{e}.h5")
-                print(f"Saved model to disk")
-                fig = plt.figure(figsize=(12, 7))
-                plt.plot(history)
-                plt.savefig(f'./loss_per_move-{e}.png')
-                plt.close()
-                fig = plt.figure(figsize=(12, 7))
-                plt.plot(apples_per_epsiode, '.')
-                plt.savefig(f'./score_per_episode-{e}.png')
-                plt.close()
+                if self.save_results:
+                    # save model and and plot various results to local directory
+                    # serialize model to JSON
+                    model_json = model.to_json()
+                    with open(f"./results/03_deep_q_results/model-{e}.json", "w") as json_file:
+                        json_file.write(model_json)
+                    # serialize weights to HDF5
+                    model.save_weights(f"./results/03_deep_q_results/model-{e}.h5")
+                    print(f"Saved model to disk")
+
+                    # plot results
+                    fig = plt.figure(figsize=(12, 7))
+                    plt.plot(history)
+                    plt.savefig(f'./results/03_deep_q_results/loss_per_move-{e}.png')
+                    plt.close()
+                    fig = plt.figure(figsize=(12, 7))
+                    plt.plot(apples_per_epsiode, '.')
+                    plt.savefig(f'./results/03_deep_q_results/score_per_episode-{e}.png')
+                    plt.close()
             apples_per_epsiode.append(apple_episode_count)
-            move_count = 0
 
 
-def create_keras_model():
-    # create model
-    model = Sequential()
-    # add model layers
-    model.add(Dense(5, input_shape=(6,)))
-    model.add(Dense(3))
-    # compile model
-    model.compile(optimizer='adam', loss='mse')
+def read_or_create_keras_model():
+    try:
+        # load json and create model
+        json_file = open(f"./results/03_deep_q_results/model-200.json", 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        loaded_model = model_from_json(loaded_model_json)
+        # load weights into new model
+        loaded_model.load_weights(f"./results/03_deep_q_results/model-200.h5")
+        print("Loaded model from disk")
+        return loaded_model
+    except:
+        # create model
+        model = Sequential()
+        # add model layers
+        model.add(Dense(5, input_shape=(6,)))
+        model.add(Dense(3))
+        # compile model
+        model.compile(optimizer='adam', loss='mse')
     return model
 
 
 if __name__ == "__main__":
-    theApp = App(agent=Snake(), caption='Deep Q-Learning')
-    model = create_keras_model()
+    theApp = App(agent=Snake(), caption='Deep Q-Learning', save_every=25)
+    model = read_or_create_keras_model()
     exp_replay = ExperienceReplay(max_memory=10_000, alpha=.1, discount=.9)
-    theApp.train_model(model, n_episodes=501, epsilon=.1, exp_replay=exp_replay, n_deaths_save=10)
+    theApp.train_model(model, n_episodes=301, epsilon=.1, exp_replay=exp_replay)
