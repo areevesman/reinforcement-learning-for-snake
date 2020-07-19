@@ -16,7 +16,7 @@ Tabular Q-learning and Value Function Approximation are implemented (using a sim
 - `cd reinforcemt-learning-for-snake`
 - `cd code`
 - To play snake:
-   - `python snake.py`
+   - `python play_snake.py`
 - To train a snake with Q-learning:
    - `python train_q_learning.py`
 - To train a snake with VFA:
